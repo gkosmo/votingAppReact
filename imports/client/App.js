@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import { createContainer } from 'meteor/react-meteor-data';
 import { autobind } from 'core-decorators';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
-
+import Random from 'meteor/random';
 import Item from './Item';
 import IsRole from './utilities/IsRole';
-import Votes from '../api/Items';
+import Voted from './utilities/Voted';
+
+import Votes from '../api/Votes';
 import Items from '../api/Items';
 
 @autobind
@@ -30,8 +32,18 @@ class App extends Component {
     } else {
       Session.set('showAll', true);
     }
-
   }
+  voted(itemId){
+      return this.props.votes.includes(itemId);
+  }
+  randomItem(event){
+    if(this.props.testRandom) {
+          Session.set('randomTest', false);
+        } else {
+          Session.set('randomTest', true);
+        }
+      console.log(this.props.items);
+ }
 
   render() {
     if (!this.props.ready) {
@@ -54,6 +66,10 @@ class App extends Component {
           <input type='text' ref='itemTwo'/>
           <button type='submit'>Add Items</button>
         </form>
+        <div className="jumbotron">
+
+          </div>
+          <button onClick={this.randomItem}>  Random </button>
         <ReactCSSTransitionGroup
           transitionName='item'
           transitionEnterTimeout={600}
@@ -61,7 +77,17 @@ class App extends Component {
           transitionAppear={true}
           transitionAppearTimeout={600}>
           {this.props.items.map((item) => {
-            return <Item item={item} key={item._id}/>
+            if(this.voted(item._id)) {
+             return( <div>
+                <Item item={item} voted={true} key={item._id}/>
+            </div> );
+            } else {
+              return( <div>
+                <Item item={item} voted={false} key={item._id}/>
+            </div> );
+            }
+
+
           })}
         </ReactCSSTransitionGroup>
       </main>
@@ -73,19 +99,44 @@ export default createContainer(({params}) => {
   let itemsSub = Meteor.subscribe('allItems');
   let userSub = Meteor.subscribe('currentUser');
   let showAll = Session.get('showAll');
-
+  let votesSub = Meteor.subscribe('allVotes');
   let itemsArray;
-  if (params.id) {
-    itemsArray = Items.find({_id: params.id}).fetch();
-  } else {
-    itemsArray = Items.find({}, {
-      limit: showAll ? 50 : 1,
-      sort: { lastUpdated: 1 }
-    }).fetch()
+  let testRandom = Session.get('randomTest');
+  if(testRandom) {
+      itemsArray = Items.find({}, {
+        limit:  50,
+      }).fetch();
+        console.log(itemsArray);
+         let itemsCount = itemsArray.length;
+         let itemIndex = Math.floor( Math.random() * itemsCount);
+         console.log(itemIndex);
+
+          itemsArray= [ itemsArray[itemIndex]];
+         console.log(itemsArray);
+    console.log('in testRandom');
+    } else {
+    if (params.id) {
+      itemsArray = Items.find({_id: params.id}).fetch();
+    } else {
+      console.log('not params');
+        itemsArray = Items.find({}, {
+          limit: showAll ? 50 : 1,
+          sort: { lastUpdated: 1 }
+        }).fetch()
+      }
+  }
+    let votesArray = [];
+
+  if( votesSub.ready()){
+    votesArray = Votes.find({}).fetch();
+  votesArray = votesArray[0];
+  votesArray = votesArray.votes;
   }
   return {
+    testRandom,
     showAll,
-    ready: itemsSub.ready() && userSub.ready(),
-    items: itemsArray
+    ready: itemsSub.ready() && userSub.ready() && votesSub.ready(),
+    items: itemsArray,
+    votes: votesArray
   }
 }, App);

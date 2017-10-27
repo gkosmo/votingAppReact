@@ -1,7 +1,7 @@
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
 import 'babel-polyfill';
-const Votes = new Mongo.Collection('Votes');
+const Votes = new Mongo.Collection('votes');
 
 
 const VotesSchema = new SimpleSchema({
@@ -20,7 +20,10 @@ Votes.attachSchema(VotesSchema);
 if (Meteor.isServer) {
 
   Meteor.publish('allVotes', function() {
-    return Votes.find({userId: Meteor.userId()}, {});
+    console.log(Votes.find({userId: this.userId }, {}).fetch());
+    return Votes.find({userId: this.userId }, {  fields: {
+      votes: 1
+    }});
   });
 
 
@@ -38,7 +41,7 @@ if (Meteor.isServer) {
       if(Meteor.userId()) {
         console.log(ItemId);
          Votes.update({userId: Meteor.userId()}, {
-            $push: {'votes':  ItemId }  ,
+            $addToSet: {'votes':  ItemId }  ,
             $set: {
               lastUpdated
             }
