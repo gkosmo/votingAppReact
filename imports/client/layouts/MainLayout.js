@@ -6,6 +6,8 @@ const MainLayout = ({children}) =>
   <div className='main-layout'>
     <header>
       <h1><Link to='/'>Level Up Voting</Link></h1>
+      <h1><Link to='/search'>Search</Link></h1>
+
       <LoginButtons />
       <nav>
         <Link to='/about'>About</Link>

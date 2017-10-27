@@ -9,6 +9,7 @@ import { render } from 'react-dom';
 
 import MainLayout from './layouts/MainLayout';
 import App from './App';
+import Search from './Search';
 import About from './pages/About';
 
 Meteor.startup(() => {
@@ -18,6 +19,7 @@ Meteor.startup(() => {
         <IndexRoute component={App} />
         <Route path="/about" component={About} />
         <Route path="/items/:id" component={App} />
+        <Route path="/search" component={Search} />
       </Route>
     </Router>,
     document.getElementById('render-target')

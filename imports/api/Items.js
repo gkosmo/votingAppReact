@@ -30,8 +30,38 @@ if (Meteor.isServer) {
       sort: { lastUpdated: 1 }
     });
   });
+  Items._ensureIndex({
+    "itemOne.text": "text",
+    "itemTwo.text": "text",
+  });
+  Meteor.publish("searchItems", function(searchValue) {
+  if (!searchValue || searchValue.length == 0) {
+    return Items.find({});
+  }
+    searchValue = new RegExp( searchValue, 'i' );
 
-
+  return Items.find(
+    {  $or: [
+      {"itemOne.text": {$regex: searchValue}},
+      {"itemTwo.text": {$regex: searchValue}}
+      ]
+    },
+    {
+      // `fields` is where we can add MongoDB projections. Here we're causing
+      // each document published to include a property named `score`, which
+      // contains the document's search rank, a numerical value, with more
+      // relevant documents having a higher score.
+      // fields: {
+      //   score: { $meta: "textScore" }
+      // },
+      // // This indicates that we wish the publication to be sorted by the
+      // `score` property specified in the projection fields above.
+      // sort: {
+      //   score: { $meta: "textScore" }
+      // }
+    }
+  );
+  });
   Meteor.methods({
     insertNewItem(itemOne, itemTwo) {
      if(Meteor.userId()) {
